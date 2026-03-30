@@ -146,13 +146,12 @@ class WeatherWorker(QThread):
         if not self.api_key:
             raise Exception("API ключ не установлен")
         
-        # Используем REST API вместо GraphQL
         url = f"https://api.weather.yandex.ru/v2/forecast"
         params = {
             "lat": self.lat,
             "lon": self.lon,
-            "limit": 1,  # Только текущая погода
-            "hours": False  # Не нужны почасовые данные
+            "limit": 1,  
+            "hours": False  
         }
         headers = {
             "X-Yandex-Weather-Key": self.api_key
@@ -170,10 +169,10 @@ class WeatherWorker(QThread):
                         'temperature': fact.get('temp'),
                         'condition': fact.get('condition'),
                         'humidity': fact.get('humidity'),
-                        'pressure': fact.get('pressure_mm'),  # В REST API давление уже в мм рт. ст.
+                        'pressure': fact.get('pressure_mm'),  
                         'windSpeed': fact.get('wind_speed'),
                         'uvIndex': fact.get('uv_index'),
-                        'feels_like': fact.get('feels_like'),  # Ощущается как
+                        'feels_like': fact.get('feels_like'),  
                         'timestamp': datetime.now()
                     }
                 else:
@@ -290,9 +289,7 @@ class SettingsDialog(QDialog):
                 LAT = lat
                 LON = lon
                 
-                # Сохраняем в файл
                 if save_config(api_key, lat, lon):
-                    # Перезапускаем рабочий поток с новыми настройками
                     if hasattr(self.parent, 'weather_worker') and self.parent.weather_worker:
                         self.parent.weather_worker.stop()
                         self.parent.weather_worker.wait()
@@ -309,7 +306,6 @@ class SettingsDialog(QDialog):
             QMessageBox.warning(self, "Ошибка", "Неверный формат координат")
 
 class WeatherApp(QMainWindow):
-    """Главное окно приложения"""
     def __init__(self):
         super().__init__()
         self.weather_worker = None
@@ -318,36 +314,29 @@ class WeatherApp(QMainWindow):
         self.init_weather()
         
     def init_ui(self):
-        """Инициализация интерфейса"""
         self.setWindowTitle("WeatherReport")
         self.setGeometry(100, 100, 500, 600)
         self.setFixedSize(500, 600)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint)
         
-        # Устанавливаем иконку окна
         if os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
         
-        # Создаем центральный виджет с градиентом
         central_widget = GradientWidget()
         self.setCentralWidget(central_widget)
         
-        # Создаем контейнер для содержимого с прозрачным фоном
         content_widget = QWidget()
         content_widget.setAttribute(Qt.WA_TranslucentBackground)
         content_layout = QVBoxLayout(content_widget)
         
-        # Часы
         self.clock = ClockWidget()
         content_layout.addWidget(self.clock)
         
-        # Виджет погоды с сеткой
         weather_widget = QWidget()
         weather_widget.setStyleSheet("background-color: rgba(255, 255, 255, 0.7); border-radius: 15px; padding: 10px;")
         weather_layout = QGridLayout(weather_widget)
         weather_layout.setSpacing(15)
         
-        # Температура
         self.temp_label = QLabel("Загрузка...")
         self.temp_label.setAlignment(Qt.AlignCenter)
         temp_font = QFont("Arial", 48, QFont.Bold)
@@ -355,7 +344,7 @@ class WeatherApp(QMainWindow):
         self.temp_label.setStyleSheet("color: #2c3e50;")
         weather_layout.addWidget(self.temp_label, 0, 0, 1, 2)
         
-        # Ощущается как
+
         self.feels_like_label = QLabel("")
         self.feels_like_label.setAlignment(Qt.AlignCenter)
         feels_font = QFont("Arial", 12)
@@ -363,7 +352,7 @@ class WeatherApp(QMainWindow):
         self.feels_like_label.setStyleSheet("color: #34495e;")
         weather_layout.addWidget(self.feels_like_label, 1, 0, 1, 2)
         
-        # Погодные условия
+        
         self.condition_label = QLabel("")
         self.condition_label.setAlignment(Qt.AlignCenter)
         condition_font = QFont("Arial", 16)
@@ -371,7 +360,6 @@ class WeatherApp(QMainWindow):
         self.condition_label.setStyleSheet("color: #2c3e50;")
         weather_layout.addWidget(self.condition_label, 2, 0, 1, 2)
         
-        # Влажность
         humidity_widget = QWidget()
         humidity_layout = QHBoxLayout(humidity_widget)
         humidity_layout.addWidget(QLabel("💧 Влажность:"))
@@ -380,7 +368,6 @@ class WeatherApp(QMainWindow):
         humidity_layout.addStretch()
         weather_layout.addWidget(humidity_widget, 3, 0)
         
-        # Давление
         pressure_widget = QWidget()
         pressure_layout = QHBoxLayout(pressure_widget)
         pressure_layout.addWidget(QLabel("🌡️ Давление:"))
@@ -389,7 +376,6 @@ class WeatherApp(QMainWindow):
         pressure_layout.addStretch()
         weather_layout.addWidget(pressure_widget, 3, 1)
         
-        # Ветер
         wind_widget = QWidget()
         wind_layout = QHBoxLayout(wind_widget)
         wind_layout.addWidget(QLabel("💨 Ветер:"))
@@ -398,7 +384,6 @@ class WeatherApp(QMainWindow):
         wind_layout.addStretch()
         weather_layout.addWidget(wind_widget, 4, 0)
         
-        # УФ-индекс
         uv_widget = QWidget()
         uv_layout = QHBoxLayout(uv_widget)
         uv_layout.addWidget(QLabel("☀️ УФ-индекс:"))
@@ -407,7 +392,6 @@ class WeatherApp(QMainWindow):
         uv_layout.addStretch()
         weather_layout.addWidget(uv_widget, 4, 1)
         
-        # Время последнего обновления
         self.update_time_label = QLabel("")
         self.update_time_label.setAlignment(Qt.AlignCenter)
         self.update_time_label.setStyleSheet("color: #7f8c8d; font-size: 10px;")
@@ -415,7 +399,6 @@ class WeatherApp(QMainWindow):
         
         content_layout.addWidget(weather_widget)
         
-        # Кнопки
         buttons_layout = QHBoxLayout()
         
         self.refresh_btn = QPushButton("🔄 Обновить погоду")
@@ -475,7 +458,6 @@ class WeatherApp(QMainWindow):
         
         content_layout.addLayout(buttons_layout)
         
-        # Устанавливаем основной контейнер в центральный виджет
         main_layout = QVBoxLayout(central_widget)
         main_layout.addWidget(content_widget)
         
@@ -506,7 +488,6 @@ class WeatherApp(QMainWindow):
         self.hide()
         
     def init_weather(self):
-        """Инициализация получения погоды"""
         if ACCESS_KEY:
             if self.weather_worker:
                 self.weather_worker.stop()
@@ -527,54 +508,43 @@ class WeatherApp(QMainWindow):
         self.tray_timer.start(60000)
         
     def update_weather(self, weather_data):
-        """Обновление отображения погоды"""
-        # Температура
         temp = weather_data.get('temperature')
         if temp is not None:
             self.temp_label.setText(f"{temp}°C")
         
-        # Ощущается как
         feels_like = weather_data.get('feels_like')
         if feels_like is not None:
             self.feels_like_label.setText(f"Ощущается как {feels_like}°C")
         
-        # Погодные условия
         condition = weather_data.get('condition')
         if condition:
             emoji = get_weather_emoji(condition)
             condition_name = get_condition_name(condition)
             self.condition_label.setText(f"{emoji} {condition_name}")
         
-        # Влажность
         humidity = weather_data.get('humidity')
         if humidity is not None:
             self.humidity_label.setText(f"{humidity}%")
         
-        # Давление (уже в мм рт. ст.)
         pressure = weather_data.get('pressure')
         if pressure is not None:
             self.pressure_label.setText(f"{pressure} мм рт. ст.")
         
-        # Ветер
         wind_speed = weather_data.get('windSpeed')
         if wind_speed is not None:
             self.wind_label.setText(f"{wind_speed} м/с")
         
-        # УФ-индекс
         uv_index = weather_data.get('uvIndex')
         if uv_index is not None:
             uv_desc, uv_emoji = get_uv_index_description(uv_index)
             self.uv_label.setText(f"{uv_emoji} {uv_index} ({uv_desc})")
         
-        # Обновляем время последнего обновления
         update_time = weather_data.get('timestamp', datetime.now()).strftime("%H:%M:%S")
         self.update_time_label.setText(f"Обновлено: {update_time}")
         
-        # Обновляем подсказку в трее
         self.update_tray_tooltip()
         
     def update_tray_tooltip(self):
-        """Обновление всплывающей подсказки в трее"""
         temp_text = self.temp_label.text()
         condition_text = self.condition_label.text()
         
@@ -584,7 +554,6 @@ class WeatherApp(QMainWindow):
             self.tray_icon.setToolTip(tooltip)
         
     def manual_refresh(self):
-        """Ручное обновление погоды"""
         if ACCESS_KEY and self.weather_worker:
             self.temp_label.setText("Обновление...")
             refresh_thread = threading.Thread(target=self.force_refresh)
@@ -592,7 +561,6 @@ class WeatherApp(QMainWindow):
             refresh_thread.start()
         
     def force_refresh(self):
-        """Принудительное обновление"""
         try:
             weather_data = self.weather_worker.get_weather()
             self.update_weather(weather_data)
@@ -600,7 +568,6 @@ class WeatherApp(QMainWindow):
             self.show_error(str(e))
         
     def show_error(self, error_msg):
-        """Показ ошибки"""
         if "Неверный API ключ" in error_msg:
             QMessageBox.warning(self, "Ошибка", f"{error_msg}\n\nПожалуйста, проверьте API ключ в настройках")
             self.temp_label.setText("❌ Неверный API ключ")
@@ -614,18 +581,15 @@ class WeatherApp(QMainWindow):
             self.condition_label.setText("")
         
     def open_settings(self):
-        """Открытие окна настроек"""
         settings_dialog = SettingsDialog(self)
         settings_dialog.exec_()
         
     def show_window(self):
-        """Показ главного окна"""
         self.show()
         self.activateWindow()
         self.raise_()
         
     def on_tray_activated(self, reason):
-        """Обработчик клика по иконке в трее"""
         if reason == QSystemTrayIcon.DoubleClick:
             if self.isVisible():
                 self.hide()
@@ -638,7 +602,6 @@ class WeatherApp(QMainWindow):
                 self.show_window()
                 
     def exit_app(self):
-        """Выход из приложения"""
         if self.weather_worker:
             self.weather_worker.stop()
             self.weather_worker.wait()
@@ -646,12 +609,10 @@ class WeatherApp(QMainWindow):
         QApplication.quit()
         
     def closeEvent(self, event):
-        """Обработчик закрытия окна"""
         event.ignore()
         self.hide()
 
 def main():
-    # Загружаем сохраненные настройки
     load_config()
     
     app = QApplication(sys.argv)
